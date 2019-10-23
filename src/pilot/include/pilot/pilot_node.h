@@ -12,17 +12,25 @@
 
 #include <ros/ros.h>
 #include <geometry_msgs/Vector3.h>
-#include <std_msgs/Float64.h>
-#include <std_msgs/UInt8.h>
+#include <geometry_msgs/Vector3Stamped.h>
 #include <geometry_msgs/QuaternionStamped.h>
 #include <geometry_msgs/PointStamped.h>
+#include <std_msgs/Float64.h>
+#include <std_msgs/UInt8.h>
+#include <std_msgs/Float32.h>
 #include <sensor_msgs/Joy.h>
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/NavSatFix.h>
 
 
 #include <dji_sdk/dji_sdk.h>
+#include <dji_sdk/DroneTaskControl.h>
+#include <dji_sdk/SDKControlAuthority.h>
+#include <dji_sdk/QueryDroneVersion.h>
+#include <dji_sdk/SetLocalPosRef.h>
 
+
+#include <tf/tf.h>
 class Pilot
 {
     //! 初始化函数及控制函数
@@ -33,11 +41,11 @@ class Pilot
         bool obtain_control();
         bool takeoff();
         bool land();
-        void setPosHori(float64 px,float64 py);
-        void setVelHori(float64 vx,float64 vy);
-        void setPosVert(float64 h);
-        void setVelVert(float64 v);
-        void setYaw(float64 yaw);
+        void setPosHori(float px,float py);
+        void setVelHori(float vx,float vy);
+        void setPosVert(float h);
+        void setVelVert(float v);
+        void setYaw(float yaw);
 
     //! 无人机状态变量
     private:
@@ -48,7 +56,7 @@ class Pilot
         // geometry_msgs::Vector3 angular_vel;
         geometry_msgs::Vector3 velocity;
         std_msgs::Float32 height;
-        sensor_msgs::imu data_imu;
+        sensor_msgs::Imu data_imu;
         uint8_t flight_status;
         uint8_t display_mode;
 

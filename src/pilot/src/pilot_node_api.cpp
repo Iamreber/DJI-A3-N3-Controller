@@ -131,7 +131,7 @@ bool Pilot::land()
     return true;
 }
 
-void Pilot::setPosHori(Float64 px,Float64 py)
+void Pilot::setPosHori(float px,float py)
 {
     sensor_msgs::Joy ctrlCmd;
     uint8_t flag = (DJISDK::HORIZONTAL_POSITION |
@@ -147,7 +147,7 @@ void Pilot::setPosHori(Float64 px,Float64 py)
     ctrl_cmd_pub.publish(ctrlCmd);
 }
 
-void Pilot::setVelHori(Float64 vx,Float64 vy)
+void Pilot::setVelHori(float vx,float vy)
 {
     sensor_msgs::Joy ctrlCmd;
     uint8_t flag = (DJISDK::HORIZONTAL_VELOCITY |
@@ -163,7 +163,7 @@ void Pilot::setVelHori(Float64 vx,Float64 vy)
     ctrl_cmd_pub.publish(ctrlCmd);
 }
 
-void Pilot::setPosVert(Float64 h)
+void Pilot::setPosVert(float h)
 {
     sensor_msgs::Joy ctrlCmd;
     uint8_t flag = (DJISDK::HORIZONTAL_POSITION |
@@ -179,7 +179,7 @@ void Pilot::setPosVert(Float64 h)
     ctrl_cmd_pub.publish(ctrlCmd);
 }
 
-void Pilot::setVelVert(Float64 v)
+void Pilot::setVelVert(float v)
 {
     sensor_msgs::Joy ctrlCmd;
     uint8_t flag = (DJISDK::HORIZONTAL_POSITION |
@@ -195,7 +195,7 @@ void Pilot::setVelVert(Float64 v)
     ctrl_cmd_pub.publish(ctrlCmd);
 }
 
-void Pilot::setYaw(Float64 yaw)
+void Pilot::setYaw(float yaw)
 {
     sensor_msgs::Joy ctrlCmd;
     uint8_t flag = (DJISDK::HORIZONTAL_VELOCITY |
