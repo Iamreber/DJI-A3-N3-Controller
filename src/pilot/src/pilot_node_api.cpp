@@ -253,44 +253,68 @@ std_msgs::Float32 height_pull()
 
 //! 回调函数定义
 
-void Pilot::dji_attitude_callback(const geometry_msgs::QuaternionStamped::ConstPtr& msg)
+void dji_attitude_callback(const geometry_msgs::QuaternionStamped::ConstPtr& msg)
 {
     //! 四元数转换成欧拉角
     //TODO
-    tf::Matrix3x3 R_FLU2ENU(tf::Quaternion(msg->x, msg->y, msg->z, msg->w));
-    R_FLU2ENU.getRPY(data_attitude->x, data_attitude->y, data_attitude->z);
+    if(p)
+    {
+    	tf::Matrix3x3 R_FLU2ENU(tf::Quaternion(msg->x, msg->y, msg->z, msg->w));
+    	R_FLU2ENU.getRPY(p->data_attitude->x, p->data_attitude->y, p->data_attitude->z);
+    }
     return;
 }
-void Pilot::dji_gps_callback(const sensor_msgs::NavSatFix::ConstPtr& msg)
+void dji_gps_callback(const sensor_msgs::NavSatFix::ConstPtr& msg)
 {
-    data_gps_position = *msg;
-    return;
-}
-void Pilot::dji_flight_status_callback(const std_msgs::UInt8::ConstPtr& msg)
+if(p)
 {
-    flight_status = *msg;
+    p->data_gps_position = *msg;
+} 
     return;
+
 }
-void Pilot::dji_display_mode_callback(const std_msgs::UInt8::ConstPtr& msg)
+void dji_flight_status_callback(const std_msgs::UInt8::ConstPtr& msg)
 {
-    display_mode = *msgs;
-    return;
-}
-void Pilot::dji_local_position_callback(const geometry_msgs::PointStamped::ConstPtr& msg)
+if(p)
 {
-    data_local_position = *msgs;
+    p->flight_status = *msg;
+}    
     return;
 }
-void Pilot::dji_imu_callback(const sensor_msgs::Imu::ConstPtr& msg)
+void dji_display_mode_callback(const std_msgs::UInt8::ConstPtr& msg)
+{
+if(p)
+{
+    p->display_mode = *msgs;
+} 
+    return;
+}
+void dji_local_position_callback(const geometry_msgs::PointStamped::ConstPtr& msg)
+{
+if(p)
+{
+    p->data_local_position = *msgs;
+}
+    return;
+}
+void dji_imu_callback(const sensor_msgs::Imu::ConstPtr& msg)
+{
+if(p)
 {
     data_imu = *msg;
 }
-void Pilot::dji_velocity_callback(const geometry_msgs::Vector3Stamped::ConstPtr& msg)
-{
-    velocity = *msg;
+	return;
 }
-void Pilot::dji_height_callback(const std_msgs::Float32::ConstPtr& msg)
+void dji_velocity_callback(const geometry_msgs::Vector3Stamped::ConstPtr& msg)
 {
+if(p)
+    velocity = *msg;
+	return;
+}
+void dji_height_callback(const std_msgs::Float32::ConstPtr& msg)
+{
+if(p)
     height = *msg;
+return;
 }
 

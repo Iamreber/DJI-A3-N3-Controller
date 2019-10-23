@@ -11,16 +11,15 @@
 #define __PILOT_NOTE_H
 
 #include <ros/ros.h>
-#include <geometry_msgs/Vector3>
-#include <std_msgs/Float64>
-#include <std_msgs/UInt8>
-#include <geometry_msgs/QuaternionStamped>
-#include <geometry_msgs/PointStamped>
-#include <sensor_msgs/Joy>
-#include <sensor_msgs/Imu>
-#include <sensor_msgs/NavSatFix>
+#include <geometry_msgs/Vector3.h>
+#include <std_msgs/Float64.h>
+#include <std_msgs/UInt8.h>
+#include <geometry_msgs/QuaternionStamped.h>
+#include <geometry_msgs/PointStamped.h>
+#include <sensor_msgs/Joy.h>
+#include <sensor_msgs/Imu.h>
+#include <sensor_msgs/NavSatFix.h>
 
-#include <pthread>
 
 #include <dji_sdk/dji_sdk.h>
 
@@ -34,11 +33,11 @@ class Pilot
         bool obtain_control();
         bool takeoff();
         bool land();
-        void setPosHori(Float64 px,Float64 py);
-        void setVelHori(Float64 vx,Float64 vy);
-        void setPosVert(Float64 h);
-        void setVelVert(Float64 v);
-        void setYaw(Float64 yaw);
+        void setPosHori(float64 px,float64 py);
+        void setVelHori(float64 vx,float64 vy);
+        void setPosVert(float64 h);
+        void setVelVert(float64 v);
+        void setYaw(float64 yaw);
 
     //! 无人机状态变量
     private:
@@ -72,8 +71,14 @@ class Pilot
         geometry_msgs::Vector3 angular_vel_pull();  //! 角速度
         geometry_msgs::Vector3 velocity_pull();     //! ENU坐标系下的速度
         std_msgs::Float32 height_pull();            //! 相对起飞点的高度
-    //! ros 回调函数
-    public:
+    };
+class Mission
+{
+    
+
+};
+	//! ros 回调函数
+	extern Pilot* p; //! 实例化对象指针
         void dji_attitude_callback(const geometry_msgs::QuaternionStamped::ConstPtr& msg);
         void dji_gps_callback(const sensor_msgs::NavSatFix::ConstPtr& msg);
         void dji_flight_status_callback(const std_msgs::UInt8::ConstPtr& msg);
@@ -83,11 +88,5 @@ class Pilot
         void dji_velocity_callback(const geometry_msgs::Vector3Stamped::ConstPtr& msg);
         void dji_height_callback(const std_msgs::Float32::ConstPtr& msg);
 
-};
-class Mission
-{
-    
-
-};
 
 #endif 
