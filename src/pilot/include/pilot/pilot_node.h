@@ -35,8 +35,6 @@ class Pilot
 {
     //! 初始化函数及控制函数
     public:
-        Pilot();
-        ~Pilot();
         bool init();
         bool obtain_control();
         bool takeoff();
@@ -51,10 +49,10 @@ class Pilot
     private:
         sensor_msgs::NavSatFix data_gps_position;
         geometry_msgs::Point data_local_position;
-        geometry_msgs::Vector3 data_attitude;
+        geometry_msgs::QuaternionStamped data_attitude;
         // geometry_msgs::Vector3 liner_acc;
         // geometry_msgs::Vector3 angular_vel;
-        geometry_msgs::Vector3 velocity;
+        geometry_msgs::Vector3Stamped velocity;
         std_msgs::Float32 height;
         sensor_msgs::Imu data_imu;
         uint8_t flight_status;
@@ -66,7 +64,7 @@ class Pilot
 		ros::ServiceClient sdk_drone_task_service;
 		ros::ServiceClient sdk_drone_arm_service;
 		ros::ServiceClient sdk_query_version_service;
-        
+        ros::ServiceClient sdk_set_local_ref_service;
         ros::Publisher ctrl_cmd_pub;
     
     //! 无人机状态获取函数
@@ -83,29 +81,25 @@ class Pilot
     public:
         void update_attitude(const geometry_msgs::QuaternionStamped attitude);
         void update_gps_position(const sensor_msgs::NavSatFix gps_pos);
-        void update_flight_stauts(const std_msgs::UInt8 status);
+        void update_flight_status(const std_msgs::UInt8 status);
         void update_display_mode(const std_msgs::UInt8 mode);
         void update_local_position(const geometry_msgs::PointStamped local_position);
-        void update_imu(const sensor_msgs::Imu);
-        void update_velocity(const geometry_msgs::Vector3Stamped);
-        void update_height(const std_msgs::Float32);
+        void update_imu(const sensor_msgs::Imu imu);
+        void update_velocity(const geometry_msgs::Vector3Stamped vel);
+        void update_height(const std_msgs::Float32 h);
 
     };
-class Mission
-{
-    
 
-};
 	//! ros 回调函数
-	extern Pilot* p; //! 实例化对象指针
-        void dji_attitude_callback(const geometry_msgs::QuaternionStamped::ConstPtr& msg);
-        void dji_gps_callback(const sensor_msgs::NavSatFix::ConstPtr& msg);
-        void dji_flight_status_callback(const std_msgs::UInt8::ConstPtr& msg);
-        void dji_display_mode_callback(const std_msgs::UInt8::ConstPtr& msg);
-        void dji_local_position_callback(const geometry_msgs::PointStamped::ConstPtr& msg);
-        void dji_imu_callback(const sensor_msgs::Imu::ConstPtr& msg);
-        void dji_velocity_callback(const geometry_msgs::Vector3Stamped::ConstPtr& msg);
-        void dji_height_callback(const std_msgs::Float32::ConstPtr& msg);
+extern Pilot* p; //! 实例化对象指针
+void dji_attitude_callback(const geometry_msgs::QuaternionStamped::ConstPtr& msg);
+void dji_gps_callback(const sensor_msgs::NavSatFix::ConstPtr& msg);
+void dji_flight_status_callback(const std_msgs::UInt8::ConstPtr& msg);
+void dji_display_mode_callback(const std_msgs::UInt8::ConstPtr& msg);
+void dji_local_position_callback(const geometry_msgs::PointStamped::ConstPtr& msg);
+void dji_imu_callback(const sensor_msgs::Imu::ConstPtr& msg);
+void dji_velocity_callback(const geometry_msgs::Vector3Stamped::ConstPtr& msg);
+void dji_height_callback(const std_msgs::Float32::ConstPtr& msg);
 
 
 #endif 

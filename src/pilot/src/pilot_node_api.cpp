@@ -8,21 +8,21 @@
  */
 #include "pilot_node.h"
 
-void Pilot::init()
+bool Pilot::init()
 {
     ros::NodeHandle nh;
     ros::NodeHandle nh_private("~");
     
     //! dji_sdk的控制节点，向该节点发布控制信息
-    ctrl_cmd_pub = nh.advertise<sensor_msgs::Joy>("dji_sdk/flight_control_setpoint_generic");
+    ctrl_cmd_pub = nh.advertise<sensor_msgs::Joy>("dji_sdk/flight_control_setpoint_generic",10);
 
     //! dji_sdk的一些服务
     sdk_ctrl_authority_service = nh.serviceClient<dji_sdk::SDKControlAuthority> ("dji_sdk/sdk_control_authority");
 	sdk_drone_task_service = nh.serviceClient<dji_sdk::DroneTaskControl>("dji_sdk/drone_task_control");
-	sdk_drone_arm_service = nh.serviceClient<dji_sdk::DroneArmControl>("dji_sdk/drone_arm_control");
+	//sdk_drone_arm_service = nh.serviceClient<dji_sdk::DroneArmControl>("dji_sdk/drone_arm_control");
 	sdk_query_version_service = nh.serviceClient<dji_sdk::QueryDroneVersion>("dji_sdk/query_drone_version");
-
-    return;
+    sdk_set_local_ref_service = nh.serviceClient<dji_sdk::SetLocalPosRef> ("dji_sdk/set_local_pos_ref");
+    return true;
 }
 bool Pilot::obtain_control()
 {
@@ -42,14 +42,18 @@ bool Pilot::takeoff()
 {
     //! 起飞前先获取位置参考
     dji_sdk::SetLocalPosRef localPosReferenceSetter;
-    set_local_pos_reference.call(localPosReferenceSetter);
+    sdk_set_local_ref_service.call(localPosReferenceSetter);
     if(!localPosReferenceSetter.response.result)
     {
         ROS_ERROR("GPS health insufficient - No local frame reference for height. Exiting.");
         return false;
     }
+    //! 飞行任务控制服务
+    dji_sdk::DroneTaskControl droneTaskControl;
+    droneTaskControl.request.task = dji_sdk::DroneTaskControl::Request::TASK_TAKEOFF;//! 4
+    sdk_drone_task_service.call(droneTaskControl);
     ros::Time start_time = ros::Time::now();
-    if(!takeoff_land(dji_sdk::DroneTaskControl::Request::TASK_TAKEOFF))
+    if(!droneTaskControl.response.result)
     {
         return false;
     }
@@ -122,7 +126,7 @@ bool Pilot::land()
     dji_sdk::DroneTaskControl droneTaskControl;
 
     droneTaskControl.request.task = dji_sdk::DroneTaskControl::Request::TASK_LAND;//! 4
-    drone_task_service.call(droneTaskControl);
+    sdk_drone_task_service.call(droneTaskControl);
     if(!droneTaskControl.response.result)
     {
     ROS_ERROR("drone_land fail");
@@ -214,7 +218,10 @@ void Pilot::setYaw(float yaw)
 //！获取无人机状态信息
 geometry_msgs::Vector3 Pilot::attitude_pull()
 {
-    return data_attitude;
+    geometry_msgs::Vector3 ret;
+    tf::Matrix3x3 R_FLU2ENU(tf::Quaternion(data_attitude.quaternion.x, data_attitude.quaternion.y, data_attitude.quaternion.z, data_attitude.quaternion.w));
+    R_FLU2ENU.getRPY(ret.x, ret.y, ret.z);
+    return ret;
 }
 geometry_msgs::Vector3 Pilot::position_pull()
 {
@@ -245,13 +252,13 @@ geometry_msgs::Vector3 Pilot::velocity_pull()
     geometry_msgs::Vector3 ret = velocity.vector;
     return ret;
 }
-float height_pull()
+float Pilot::height_pull()
 {
-    return (float)height;
+    return (float)height.data;
 }
 
 //! 状态更新函数
-void Pilot::update_attitude(const geometry_msgs::Vector3 attitude)
+void Pilot::update_attitude(const geometry_msgs::QuaternionStamped attitude)
 {
     data_attitude = attitude;
 }
@@ -259,18 +266,30 @@ void Pilot::update_gps_position(const sensor_msgs::NavSatFix gps_pos)
 {
     data_gps_position = gps_pos;
 }
-void Pilot::update_flight_stauts(const std_msgs::UInt8 status)
+void Pilot::update_flight_status(const std_msgs::UInt8 status)
 {
-    flight_status = status;
+    flight_status = status.data;
 }
 void Pilot::update_display_mode(const std_msgs::UInt8 mode)
 {
-    display_mode = mode;
+    display_mode = mode.data;
 }
-void Pilot::update_local_position()
-void Pilot::update_imu();
-void Pilot::update_velocity();
-void Pilot::update_height();
+void Pilot::update_local_position(const geometry_msgs::PointStamped local_position)
+{
+    data_local_position = local_position.point;
+}
+void Pilot::update_imu(const sensor_msgs::Imu imu)
+{
+    data_imu = imu;
+}
+void Pilot::update_velocity(const geometry_msgs::Vector3Stamped vel)
+{
+    velocity = vel;
+}
+void Pilot::update_height(const std_msgs::Float32 h)
+{
+    height = h;
+}
 
 //! 回调函数定义
 
@@ -280,8 +299,7 @@ void dji_attitude_callback(const geometry_msgs::QuaternionStamped::ConstPtr& msg
     //TODO
     if(p)
     {
-    	tf::Matrix3x3 R_FLU2ENU(tf::Quaternion(msg->x, msg->y, msg->z, msg->w));
-    	R_FLU2ENU.getRPY(p->data_attitude->x, p->data_attitude->y, p->data_attitude->z);
+    	p->update_attitude(*msg);
     }
     return;
 }
@@ -289,7 +307,7 @@ void dji_gps_callback(const sensor_msgs::NavSatFix::ConstPtr& msg)
 {
 if(p)
 {
-    p->data_gps_position = *msg;
+    p->update_gps_position(*msg);
 } 
     return;
 
@@ -298,7 +316,7 @@ void dji_flight_status_callback(const std_msgs::UInt8::ConstPtr& msg)
 {
 if(p)
 {
-    p->flight_status = *msg;
+    p->update_flight_status(*msg);
 }    
     return;
 }
@@ -306,7 +324,7 @@ void dji_display_mode_callback(const std_msgs::UInt8::ConstPtr& msg)
 {
 if(p)
 {
-    p->display_mode = *msg;
+    p->update_display_mode(*msg);
 } 
     return;
 }
@@ -314,7 +332,7 @@ void dji_local_position_callback(const geometry_msgs::PointStamped::ConstPtr& ms
 {
 if(p)
 {
-    p->data_local_position = *msg;
+    p->update_local_position(*msg);
 }
     return;
 }
@@ -322,20 +340,20 @@ void dji_imu_callback(const sensor_msgs::Imu::ConstPtr& msg)
 {
 if(p)
 {
-    p->data_imu = *msg;
+    p->update_imu(*msg);
 }
 	return;
 }
 void dji_velocity_callback(const geometry_msgs::Vector3Stamped::ConstPtr& msg)
 {
 if(p)
-    p->velocity = *msg;
-	return;
+    p->update_velocity(*msg);
+    return;
 }
 void dji_height_callback(const std_msgs::Float32::ConstPtr& msg)
 {
 if(p)
-    p->height = *msg;
+    p->update_height(*msg);
 return;
 }
 
