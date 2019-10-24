@@ -245,11 +245,32 @@ geometry_msgs::Vector3 Pilot::velocity_pull()
     geometry_msgs::Vector3 ret = velocity.vector;
     return ret;
 }
-std_msgs::Float32 height_pull()
+float height_pull()
 {
-    return height;
+    return (float)height;
 }
 
+//! 状态更新函数
+void Pilot::update_attitude(const geometry_msgs::Vector3 attitude)
+{
+    data_attitude = attitude;
+}
+void Pilot::update_gps_position(const sensor_msgs::NavSatFix gps_pos)
+{
+    data_gps_position = gps_pos;
+}
+void Pilot::update_flight_stauts(const std_msgs::UInt8 status)
+{
+    flight_status = status;
+}
+void Pilot::update_display_mode(const std_msgs::UInt8 mode)
+{
+    display_mode = mode;
+}
+void Pilot::update_local_position()
+void Pilot::update_imu();
+void Pilot::update_velocity();
+void Pilot::update_height();
 
 //! 回调函数定义
 
@@ -285,7 +306,7 @@ void dji_display_mode_callback(const std_msgs::UInt8::ConstPtr& msg)
 {
 if(p)
 {
-    p->display_mode = *msgs;
+    p->display_mode = *msg;
 } 
     return;
 }
@@ -293,7 +314,7 @@ void dji_local_position_callback(const geometry_msgs::PointStamped::ConstPtr& ms
 {
 if(p)
 {
-    p->data_local_position = *msgs;
+    p->data_local_position = *msg;
 }
     return;
 }
@@ -301,20 +322,20 @@ void dji_imu_callback(const sensor_msgs::Imu::ConstPtr& msg)
 {
 if(p)
 {
-    data_imu = *msg;
+    p->data_imu = *msg;
 }
 	return;
 }
 void dji_velocity_callback(const geometry_msgs::Vector3Stamped::ConstPtr& msg)
 {
 if(p)
-    velocity = *msg;
+    p->velocity = *msg;
 	return;
 }
 void dji_height_callback(const std_msgs::Float32::ConstPtr& msg)
 {
 if(p)
-    height = *msg;
+    p->height = *msg;
 return;
 }
 

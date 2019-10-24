@@ -78,7 +78,18 @@ class Pilot
         geometry_msgs::Vector3 liner_acc_pull();    //! 线加速度
         geometry_msgs::Vector3 angular_vel_pull();  //! 角速度
         geometry_msgs::Vector3 velocity_pull();     //! ENU坐标系下的速度
-        std_msgs::Float32 height_pull();            //! 相对起飞点的高度
+        float height_pull();            //! 相对起飞点的高度
+    //! 无人机状态更新函数，给callback调用
+    public:
+        void update_attitude(const geometry_msgs::QuaternionStamped attitude);
+        void update_gps_position(const sensor_msgs::NavSatFix gps_pos);
+        void update_flight_stauts(const std_msgs::UInt8 status);
+        void update_display_mode(const std_msgs::UInt8 mode);
+        void update_local_position(const geometry_msgs::PointStamped local_position);
+        void update_imu(const sensor_msgs::Imu);
+        void update_velocity(const geometry_msgs::Vector3Stamped);
+        void update_height(const std_msgs::Float32);
+
     };
 class Mission
 {
